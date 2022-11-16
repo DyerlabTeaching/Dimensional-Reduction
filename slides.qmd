@@ -1,101 +1,406 @@
 ---
-title: "Title"
-subtitle: "&nbsp;"
+title: "Ordination"
+subtitle: ""
 author: Rodney Dyer, PhD
-format: revealjs
+format: 
+  revealjs:
+    html-math-method: katex
 ---
 
+## Overall Impetus
+
+There are many times when we have several columns of data recorded on indiviudal observations.
+
+- Genotypes of individuals from seveal populations    
+- Species counts across sampling locations    
+- Climatic data (e.g., water/temperature) measured at several locations  
 
 
-# Transition {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
+## Consequences
 
-## Bullets
+Some of the consequences of this is that we may have problems:  
 
-When you click the **Render** button a document will be generated that includes:
+- Visualizing more than 2-3 dimensions of the data  
+- Understand which subset of the data are correlated (and thus redundant)  
+- Trouble identifying signal from noise
 
--   Content authored with markdown
--   Output from executable code
+
+:::{.fragment}
+Are there methods for visualization and quantification of data like this?
+:::
 
 
-## Two Columns Specified
+# Eigen Structure {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
 
+## Eigen Desconstruction
+
+> A method to factor high dimensional data into additive subcomponents
+
+Just like you can factor the equation $-6x^2 + 5x + 4 = 0$ into the factors $(2x+1)(-3x+4)$, large data sets with $N$ rows and $K$ columns of data can be factored based upon their column-wise mean values, variances, and covariances between columns of data.
+
+
+
+## Way Cool Matrix Algebra
+
+Consider the matrix of data $X$ with $N$ rows and $K$ columns.  The variance of each of the $K$ data columns and their covariances, can be represented as an $KxK$ covariance matrix and is derived from this fancy formula.
+
+&nbsp;
+
+$S = X'[X'X]^{-1}X$
+
+## &nbsp;
+
+$$
+S = \left[ \begin{array}{cccc}
+\sigma_A^2 & \sigma_{AB}^2 & \ldots & \sigma_{AK}^2 \\
+\sigma_{BA}^2 & \sigma_{B}^2 & \ldots & \sigma_{AK}^2 \\
+\sigma_{CA}^2 & \sigma_{BC}^2 & \ddots & \sigma_{AK}^2 \\
+\vdots & \vdots & \vdots & \vdots \\
+\sigma_{KA}^2 & \sigma_{KD}^2 & \ldots & \sigma_{K}^2 \\
+\end{array}\right]
+$$
+
+
+## Partitioning Variation & Covariation
+
+So we can partition this matrix as:
+
+$$
+S = \sum_{i=1}^K \lambda_{i} \ell^\prime_i \ell_i
+$$
+
+Where:  
+
+- $\lambda_i$ is a scaling number, and 
+
+- $\ell_i$ is a 1xK vector of values.
+
+
+## Principal Component Rotations
+
+Consider the following data
+
+```{r}
+#| echo: false
+library( tidyverse )
+library( ggExtra )
+data.frame( X = rnorm( 51, mean=12, sd = 3)) %>%
+  mutate( Y = (3.2*X + rnorm(51, sd=4)) - 20) -> df
+
+df %>%
+  ggplot( aes(X,Y) ) + 
+  geom_point() +
+  theme_minimal(base_size=14) -> p 
+p
+```
+
+## Marginal Distributions
+
+```{r}
+#| echo: false
+ggMarginal( p, type="densigram")
+```
+
+
+
+## &nbsp; {background-color="white" background-image="https://live.staticflickr.com/65535/51206415998_3527374bc2_c_d.jpg" background-size="initial" background-position="center"}
+
+## &nbsp; {background-color="white" background-image="https://live.staticflickr.com/65535/51206210046_4cc91ca0ea_c_d.jpg" background-size="initial" background-position="center"}
+
+## &nbsp; {background-color="white" background-image="https://live.staticflickr.com/65535/51206975949_e08e018ffe_c_d.jpg" background-size="initial" background-position="center"}
+
+## &nbsp; {background-color="white" background-image="https://live.staticflickr.com/65535/51206975979_22ceef0be6_c_d.jpg" background-size="initial" background-position="center"}
+
+## &nbsp; {background-color="white" background-image="https://live.staticflickr.com/65535/51206994494_bcd4fb98c3_c_d.jpg" background-size="initial" background-position="center"}
+
+
+## Creating Othoginal Data
+
+The transformation you are doing is based upon applying a <font color="red">linear transformation</font> of the original data from its *previous* coordinate space into an *identically sized* new coordinate space.
+
+
+
+
+
+
+# &nbsp;
+
+```{r}
+library( gstudio )
+data( arapat )
+mv_genos <- to_mv( arapat ) 
+fit.pca <- princomp(mv_genos,cor = TRUE)
+names( fit.pca )
+```
+
+# &nbsp;
+
+```{r eval=FALSE}
+summary( fit.pca )
+```
+
+```{r echo=FALSE}
+pcaPrint <- function (x, digits = 3, loadings = x$print.loadings, cutoff = x$cutoff,n, ...) 
+{
+    #Check for sensible value of n; default to full output
+    if (missing(n) || n > length(x$sdev) || n < 1){n <- length(x$sdev)}
+    vars <- x$sdev^2
+    vars <- vars/sum(vars)
+    cat("Importance of components:\n")
+    print(rbind(`Standard deviation` = x$sdev[1:n], `Proportion of Variance` = vars[1:n], 
+        `Cumulative Proportion` = cumsum(vars)[1:n]))
+    if (loadings) {
+        cat("\nLoadings:\n")
+        cx <- format(round(x$loadings, digits = digits))
+        cx[abs(x$loadings) < cutoff] <- paste(rep(" ", nchar(cx[1, 
+            1], type = "w")), collapse = "")
+        print(cx[,1:n], quote = FALSE, ...)
+    }
+    invisible(x)
+}
+pcaPrint(summary(fit.pca, loadings = FALSE, cutoff = 0.2), digits = 2,n = 30)
+```
+
+# &nbsp;
+
+```{r}
+plot( fit.pca )
+```
+
+# &nbsp;
 
 :::: {.columns}
 
 ::: {.column width="50%"}
-stuff
+### Visualization
+
+```{r eval=FALSE}
+library( tidyverse )
+predict( fit.pca ) %>%
+  data.frame() %>%
+  mutate( Species = arapat$Species) -> pred.pca 
+ggplot( pred.pca, aes(Comp.1,Comp.2,color=Species) ) + 
+  geom_point()  + 
+  theme( legend.position = "none")
+```
 :::
 
 ::: {.column width="50%"}
-::: {.fragment}
-stuff
-:::
+
+```{r echo=FALSE}
+library( tidyverse )
+predict( fit.pca ) %>%
+  data.frame() %>%
+  mutate( Species = arapat$Species) -> pred.pca 
+ggplot( pred.pca, aes(Comp.1,Comp.2,color=Species) ) + 
+  geom_point()  + 
+  theme( legend.position = "none")
+```
 :::
 
 ::::
 
-## Some Title
 
-::: {layout-ncol="2"}
-### List One
 
--   Item A
--   Item B
--   Item C
 
-### List Two
 
--   Item X
--   Item Y
--   Item Z
-:::
+# Principal Components Analysis on Frequencies
 
-## Another Slide
+Just like working on raw data, but coalescing all the individuals into single populations defined by allele frquency matrices.
 
-::: {layout-ncol="2"}
-### The code
-
-```{r eval=FALSE, echo=TRUE}
-hist( rnorm(1200) )
-```
-
-### The Plot
-
-```{r echo=FALSE}
-hist( rnorm( 1200 ) )
-```
-:::
-
-## And another slide
-
-::: {layout-ncol="2"}
--   Item X
--   Item Y
--   Item Z
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur gravida eu erat et fring. Morbi congue augue vel eros ullamcorper, eget convallis tortor sagittis. Fusce sodales viverra mauris a fringilla. Donec feugiat, justo eu blandit placerat, enim dui volutpat turpis, eu dictum lectus urna eu urna. Mauris sed massa ornare, interdum ipsum a, semper massa.
-:::
-
-## Code
-
-When you click the **Render** button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r echo=TRUE}
-px <- 0.75
-py <- 0.25
-m <- 0.1
-ret <- rep(NA,100)
-ret[1] <- py
-for( i in 2:100) {
-  ret[i] <- (1-m)*ret[(i-1)] + px * m   
-}
-```
-
-## Results
 
 ```{r}
-plot( ret, type="l")
+freqs <- frequency_matrix(arapat)
+head( freqs[,1:19] )
 ```
+
+
+
+# Principal Components Analysis on Frequencies
+
+Just like working on raw data, but coalescing all the individuals into single populations defined by allele frquency matrices.
+
+
+```{r}
+F <- as.matrix( freqs[,2:59])
+rownames( F ) <- freqs$Stratum
+fit.pca_freq <- prcomp( F, center = TRUE )
+```
+
+
+# &nbsp;
+
+```{r}
+summary( fit.pca_freq )
+```
+
+
+# &nbsp;
+
+:::: {.columns}
+
+::: {.column width="50%"}
+### PCA on Frequencies
+
+
+Just like working on raw data, but coalescing all the individuals into single populations defined by allele frquency matrices.
+
+```{r eval=FALSE}
+predict( fit.pca_freq ) %>%
+  data.frame() %>%
+  mutate( Population = freqs$Stratum ) %>%
+  ggplot( aes(PC1,PC2) ) + 
+  geom_text( aes(label=Population))
+```
+:::
+
+::: {.column width="50%"}
+```{r echo=FALSE}
+predict( fit.pca_freq ) %>%
+  data.frame() %>%
+  mutate( Population = freqs$Stratum ) %>%
+  ggplot( aes(PC1,PC2) ) + 
+  geom_text( aes(label=Population))
+```
+:::
+
+::::
+
+
+
+# Detailed Visualizations
+
+:::: {.columns}
+
+::: {.column width="50%"}
+```{r eval=FALSE}
+library( factoextra )
+fviz_pca_biplot( fit.pca_freq )
+```
+:::
+
+::: {.column width="50%"}
+<p>&nbsp;</p>
+```{r echo=FALSE}
+library( factoextra )
+fviz_pca_biplot( fit.pca_freq )
+```
+:::
+
+::::
+
+
+
+
+# Principal Coordinate Analysis
+
+Like PCA but using distance matrices instead of raw data.
+
+```{r}
+D.Euc <- genetic_distance(arapat, mode="Euclidean")
+dim(D.Euc)
+fit.gendist <- prcomp( D.Euc, center = TRUE)
+```
+
+
+# &nbsp;
+```{r}
+summary( fit.gendist )
+```
+
+
+
+# &nbsp;
+
+```{r echo=FALSE}
+fviz_pca_biplot( fit.gendist )
+```
+
+
+
+
+
+# Hierarchical Clustering {background-color="black" background-image="media/contour.png" background-size="initial" background-position="right"}
+
+
+
+# Clustering
+
+:::: {.columns}
+
+::: {.column width="50%"}
+A technique to build a representation of similarity between objects.
+
+- Supervised  
+
+- Unsupervised
+
+- Individual or Group Based
+:::
+
+::: {.column width="50%"}
+![From www.nature.com/articles/s41467-020-20507-3](https://live.staticflickr.com/65535/51734955871_9c76562bd3_w_d.jpg)
+:::
+
+::::
+
+
+
+# &nbsp;
+
+![Help File for hclust](https://live.staticflickr.com/65535/51735192018_1444d8d533_o_d.png) 
+
+
+# Visualizing From Distance Views
+
+Requires that the `matrix` objects actually be turned into `dist` objects (which are `matrix` objects with constraints).
+
+```{r}
+dist( D.Euc[1:7,1:7] )
+```
+
+
+# Visualizing From Distance Views
+
+:::: {.columns}
+
+::: {.column width="50%"}
+```{r}
+d <- dist( D.Euc )
+h <- hclust( d )
+h
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+plot(h)
+```
+:::
+
+::::
+
+
+
+
+
+
+# Interactive Plots
+
+```{r}
+library( networkD3 )
+dendroNetwork( h, height=400, zoom=TRUE,textColour = c("red","green","orange","blue")[cutree(h,4)])
+```
+
+
+
+
+
+
+
+
+
+
 
 ## Questions
 
