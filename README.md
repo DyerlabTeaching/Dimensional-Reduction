@@ -1,22 +1,20 @@
-# Topic Title
-
+# Ordination
 
 ## Impetus
 
-This is a description of the basic template file for a course component repository
+Methods for dimensional reductions.
 
 ## Student Learning Objectives
 
-At the end of this topic, you should be able to:  
- - *Learning Objective 1* 
- - *Learning Objective 2*
- - *Learning Objective 3* 
+At the end of this topic, you should be able to:    
+  - Perform a principal component analysis on multivariate data.  
+  - Understand and describe how PC rotations work and what the individual axes represent.  
+  - Conduct and interpret a hierarchical clustering analysis.  
 
 ## Content
- - [Slides](slides.html)
- - [Narrative](narrative.html)
- - [In Class](in-class.html)
- - Data Set
+ - [Slides](https://dyerlabteaching.github.io/Ordination/slides.html#/title-slide)
+ - [Narrative](https://dyerlabteaching.github.io/Ordination/narrative.html)
+ - [Data Set](https://raw.githubusercontent.com/DyerlabTeaching/Ordination/refs/heads/main/mv_genos.csv) 
 
 ## Contact Information
 
