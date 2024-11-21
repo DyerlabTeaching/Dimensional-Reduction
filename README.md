@@ -20,4 +20,4 @@ At the end of this topic, you should be able to:
 
 If you need to contact me, I am available at:  
  - Email: rjdyer@vcu.edu
- - Twitter: [@dyerlab](https://twitter.com/dyerlab/)
+
