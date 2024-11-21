@@ -20,8 +20,8 @@ format:
     footer: "[Dyerlab](https://dyerlab.org)"
     background-transition: fade
     theme: default
-    logo: "media/ces_logo.png"
     editor: source
+    echo: true
     title-slide-attributes: 
       data-background-image: "media/contour.png"
       data-background-position: "right"

@@ -2,9 +2,7 @@
 title: "Ordination"
 subtitle: ""
 author: Rodney Dyer, PhD
-format: 
-  revealjs:
-    html-math-method: katex
+format: revealjs
 ---
 
 ## Overall Impetus
@@ -111,8 +109,9 @@ ggMarginal( p, type="densigram")
 
 ## &nbsp; {background-color="white" background-image="https://live.staticflickr.com/65535/51206975979_22ceef0be6_c_d.jpg" background-size="initial" background-position="center"}
 
+<!-- 
 ## &nbsp; {background-color="white" background-image="https://live.staticflickr.com/65535/51206994494_bcd4fb98c3_c_d.jpg" background-size="initial" background-position="center"}
-
+--> 
 
 ## Creating Othoginal Data
 
@@ -121,61 +120,130 @@ The transformation you are doing is based upon applying a <font color="red">line
 
 
 
+## Performing a Principal Component Rotation
 
+I've uploaded a copy of the `mv_genos.csv` file to Canvas that have the multivariate genotypes for 358 beetles from Baja California.
 
-# &nbsp;
-
-```{r}
-library( gstudio )
-data( arapat )
-mv_genos <- to_mv( arapat ) 
-fit.pca <- princomp(mv_genos,cor = TRUE)
+```{r, echo=TRUE, eval=FALSE}
+data <- read_csv( "mv_genos.csv")
+fit.pca <- princomp( data )
 names( fit.pca )
 ```
 
-# &nbsp;
 
-```{r eval=FALSE}
+```{r echo=FALSE}
+library( gstudio )
+data( arapat )
+mv_genos <- to_mv( arapat ) 
+rownames( mv_genos ) <- make.names(rownames(mv_genos), unique=TRUE)
+colnames( mv_genos ) <- paste( "L", 1:ncol(mv_genos), sep="")
+fit.pca <- princomp( mv_genos )
+names( fit.pca )
+```
+
+
+## The Loadings
+
+```{r}
+fit.pca$loadings[,1]
+```
+
+```{r}
+
+data.frame( Variable = colnames(mv_genos), 
+            Loading = fit.pca$loadings[,1] ) |> 
+  ggplot( aes(Variable, Loading) ) + 
+  geom_col() + theme_minimal() + 
+  scale_x_discrete( guide = guide_axis( n.dodge = 3 ) )
+  
+  
+  # theme( axis.text.x = element_text(angle = 45 ) )
+
+```
+
+## Orthoginal
+
+```{r}
+data.frame( Variable = c( colnames(mv_genos), 
+                          colnames(mv_genos)),
+            Loading = c( fit.pca$loadings[,1],
+                         fit.pca$loadings[,2] ),
+            Axis = factor(rep( 1:2, each=ncol(mv_genos) ) ) ) |> 
+  ggplot( aes(Variable, Loading) ) + 
+  geom_col(position="dodge") + theme_minimal() + 
+  scale_x_discrete( guide = guide_axis( n.dodge = 3 ) ) + 
+  facet_grid(Axis ~ .)
+```
+
+
+## Angle Between Axes 
+
+
+```{r}
+a <- fit.pca$loadings[,1]
+b <- fit.pca$loadings[,2]
+
+angle <- function(x,y){
+  dot.prod <- x%*%y 
+  norm.x <- norm(x,type="2")
+  norm.y <- norm(y,type="2")
+  theta <- acos(dot.prod / (norm.x * norm.y))
+  as.numeric(theta) * 180 / pi 
+}
+
+angle( a,b )
+
+
+
+```
+
+
+
+
+## The Contents 
+
+```{r}
+fit.pca
+```
+
+
+
+## Summary
+
+```{r}
 summary( fit.pca )
 ```
 
-```{r echo=FALSE}
-pcaPrint <- function (x, digits = 3, loadings = x$print.loadings, cutoff = x$cutoff,n, ...) 
-{
-    #Check for sensible value of n; default to full output
-    if (missing(n) || n > length(x$sdev) || n < 1){n <- length(x$sdev)}
-    vars <- x$sdev^2
-    vars <- vars/sum(vars)
-    cat("Importance of components:\n")
-    print(rbind(`Standard deviation` = x$sdev[1:n], `Proportion of Variance` = vars[1:n], 
-        `Cumulative Proportion` = cumsum(vars)[1:n]))
-    if (loadings) {
-        cat("\nLoadings:\n")
-        cx <- format(round(x$loadings, digits = digits))
-        cx[abs(x$loadings) < cutoff] <- paste(rep(" ", nchar(cx[1, 
-            1], type = "w")), collapse = "")
-        print(cx[,1:n], quote = FALSE, ...)
-    }
-    invisible(x)
-}
-pcaPrint(summary(fit.pca, loadings = FALSE, cutoff = 0.2), digits = 2,n = 30)
-```
-
-# &nbsp;
+## Accumulation of Variation
 
 ```{r}
 plot( fit.pca )
 ```
 
-# &nbsp;
+## Assymptotic Description
 
-:::: {.columns}
+```{r}
+x <- summary( fit.pca )$sdev^2
+data.frame( Axis = 1:length(x), 
+            Variance  = cumsum( (x/sum(x)) ) ) |> 
+  ggplot( aes(Axis,Variance) ) + 
+  geom_line() 
+```
 
-::: {.column width="50%"}
-### Visualization
+
+
+
+## Visualizing
 
 ```{r eval=FALSE}
-library( tidyverse )
+predict( fit.pca ) %>% data.frame() %>% 
+  mutate( Species = arapat$Species) -> pred.pca 
+ggplot( pred.pca, aes(Comp.1,Comp.2,color=Species) ) + 
+  geom_point()  +  theme( legend.position = "none")
+```
+
+
+```{r echo=FALSE}
 predict( fit.pca ) %>%
   data.frame() %>%
   mutate( Species = arapat$Species) -> pred.pca 
@@ -183,116 +251,20 @@ ggplot( pred.pca, aes(Comp.1,Comp.2,color=Species) ) +
   geom_point()  + 
   theme( legend.position = "none")
 ```
-:::
-
-::: {.column width="50%"}
-
-```{r echo=FALSE}
-library( tidyverse )
-predict( fit.pca ) %>%
-  data.frame() %>%
-  mutate( Species = arapat$Species) -> pred.pca 
-ggplot( pred.pca, aes(Comp.1,Comp.2,color=Species) ) + 
-  geom_point()  + 
-  theme( legend.position = "none")
-```
-:::
-
-::::
 
 
 
+## Detailed Visualizations
 
 
-# Principal Components Analysis on Frequencies
-
-Just like working on raw data, but coalescing all the individuals into single populations defined by allele frquency matrices.
-
-
-```{r}
-freqs <- frequency_matrix(arapat)
-head( freqs[,1:19] )
-```
-
-
-
-# Principal Components Analysis on Frequencies
-
-Just like working on raw data, but coalescing all the individuals into single populations defined by allele frquency matrices.
-
-
-```{r}
-F <- as.matrix( freqs[,2:59])
-rownames( F ) <- freqs$Stratum
-fit.pca_freq <- prcomp( F, center = TRUE )
-```
-
-
-# &nbsp;
-
-```{r}
-summary( fit.pca_freq )
-```
-
-
-# &nbsp;
-
-:::: {.columns}
-
-::: {.column width="50%"}
-### PCA on Frequencies
-
-
-Just like working on raw data, but coalescing all the individuals into single populations defined by allele frquency matrices.
-
-```{r eval=FALSE}
-predict( fit.pca_freq ) %>%
-  data.frame() %>%
-  mutate( Population = freqs$Stratum ) %>%
-  ggplot( aes(PC1,PC2) ) + 
-  geom_text( aes(label=Population))
-```
-:::
-
-::: {.column width="50%"}
-```{r echo=FALSE}
-predict( fit.pca_freq ) %>%
-  data.frame() %>%
-  mutate( Population = freqs$Stratum ) %>%
-  ggplot( aes(PC1,PC2) ) + 
-  geom_text( aes(label=Population))
-```
-:::
-
-::::
-
-
-
-# Detailed Visualizations
-
-:::: {.columns}
-
-::: {.column width="50%"}
-```{r eval=FALSE}
-library( factoextra )
-fviz_pca_biplot( fit.pca_freq )
-```
-:::
-
-::: {.column width="50%"}
-<p>&nbsp;</p>
 ```{r echo=FALSE}
 library( factoextra )
-fviz_pca_biplot( fit.pca_freq )
+fviz_pca_biplot( fit.pca, col.ind="#aaa" )
 ```
-:::
-
-::::
 
 
 
-
-# Principal Coordinate Analysis
+## Principal Coordinate Analysis
 
 Like PCA but using distance matrices instead of raw data.
 
@@ -303,14 +275,14 @@ fit.gendist <- prcomp( D.Euc, center = TRUE)
 ```
 
 
-# &nbsp;
+## &nbsp;
 ```{r}
 summary( fit.gendist )
 ```
 
 
 
-# &nbsp;
+## &nbsp;
 
 ```{r echo=FALSE}
 fviz_pca_biplot( fit.gendist )
@@ -324,7 +296,7 @@ fviz_pca_biplot( fit.gendist )
 
 
 
-# Clustering
+## Clustering
 
 :::: {.columns}
 
@@ -346,12 +318,22 @@ A technique to build a representation of similarity between objects.
 
 
 
-# &nbsp;
+## Greedy Hierarchical Clustering 
+
+1. Find the two closest of the N objects.  
+2. Merge them together and find the mean of their location, this is the new node.  
+3. Find the two closes of the $N-1$ objects.  
+4. Repeat until they are all done.  
+
+
+
+
+## &nbsp;
 
 ![Help File for hclust](https://live.staticflickr.com/65535/51735192018_1444d8d533_o_d.png) 
 
 
-# Visualizing From Distance Views
+## Visualizing From Distance Views
 
 Requires that the `matrix` objects actually be turned into `dist` objects (which are `matrix` objects with constraints).
 
@@ -360,7 +342,7 @@ dist( D.Euc[1:7,1:7] )
 ```
 
 
-# Visualizing From Distance Views
+## Visualizing From Distance Views
 
 :::: {.columns}
 
@@ -389,7 +371,9 @@ plot(h)
 
 ```{r}
 library( networkD3 )
-dendroNetwork( h, height=400, zoom=TRUE,textColour = c("red","green","orange","blue")[cutree(h,4)])
+dendroNetwork( h, height=400, 
+               zoom=TRUE,
+               textColour = c("red","green","orange","blue")[cutree(h,4)])
 ```
 
 
@@ -404,7 +388,6 @@ dendroNetwork( h, height=400, zoom=TRUE,textColour = c("red","green","orange","b
 
 ## Questions
 
-::: {layout-ncol="2"}
 If you have any questions, please feel free to either post them as an "Issue" on your copy of this GitHub Repository, post to the [Canvas](https://canvas.vcu.edu) discussion board for the class, or drop me an [email](mailto://rjdyer@vcu.edu).
 
 ![](media/peter_sellers.gif){.middle fig-alt="Peter Sellers looking bored" fig-align="center" width="500"}
